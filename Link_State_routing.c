@@ -1,91 +1,76 @@
 #include <stdio.h>
-#define INFINITY 9999
-#define N 5  // Number of nodes (A–E)
+#define INF 9999
+#define MAX 5
 
-// Function to print path in forward direction (A -> B -> C)
-void printPath(int previous[], int source, int dest) {
-    int path[N], count = 0;
-    int current = dest;
+void dijkstra(int G[MAX][MAX], int start) {
+    int dist[MAX], pred[MAX], visited[MAX];
+    int i, j, count, nextNode, minDist;
 
-    // Backtrack from destination to source
-    while (current != source) {
-        path[count++] = current;
-        current = previous[current];
-    }
-    path[count++] = source;
-
-    // Print in reverse order (source → dest)
-    for (int i = count - 1; i >= 0; i--) {
-        printf("%c", path[i] + 'A');
-        if (i > 0) printf(" -> ");
-    }
-}
-
-// Function to perform Dijkstra’s algorithm
-void dijkstra(int graph[N][N], int source) {
-    int distance[N], visited[N], previous[N];
-    int i, j, count, mindistance, nextnode;
-
-    // Initialization
-    for (i = 0; i < N; i++) {
-        distance[i] = graph[source][i];
-        previous[i] = source;
+    for(i = 0; i < MAX; i++) {
+        dist[i] = (G[start][i] == 0 && i != start) ? INF : G[start][i];
+        pred[i] = start;
         visited[i] = 0;
     }
 
-    distance[source] = 0;
-    visited[source] = 1;
+    dist[start] = 0;
     count = 1;
 
-    while (count < N - 1) {
-        mindistance = INFINITY;
-
-        // Find next node with minimum distance
-        for (i = 0; i < N; i++)
-            if (distance[i] < mindistance && !visited[i]) {
-                mindistance = distance[i];
-                nextnode = i;
+    while(count < MAX) {
+        minDist = INF;
+        for(i = 0; i < MAX; i++)
+            if(!visited[i] && dist[i] < minDist) {
+                minDist = dist[i];
+                nextNode = i;
             }
 
-        visited[nextnode] = 1;
+        visited[nextNode] = 1;
 
-        // Update distances
-        for (i = 0; i < N; i++)
-            if (!visited[i] && (mindistance + graph[nextnode][i] < distance[i])) {
-                distance[i] = mindistance + graph[nextnode][i];
-                previous[i] = nextnode;
+        for(i = 0; i < MAX; i++)
+            if(!visited[i] && G[nextNode][i] != 0 &&
+               minDist + G[nextNode][i] < dist[i]) {
+                dist[i] = minDist + G[nextNode][i];
+                pred[i] = nextNode;    // <-- FIXED LINE
             }
 
         count++;
     }
 
-    // Print results
-    printf("\nShortest paths from node %c:\n", source + 'A');
-    for (i = 0; i < N; i++) {
-        if (i != source) {
-            printf("To %c : Distance = %d | Path = ", i + 'A', distance[i]);
-            printPath(previous, source, i);
+    printf("\nShortest paths from %c:\n", start + 'A');
+    for(i = 0; i < MAX; i++) {
+        if(i != start) {
+            printf("To %c: Distance = %d | Path = %c", i+'A', dist[i], start+'A');
+            int path[MAX],idx=0;
+            j = i;
+            while(j != start) {
+                path[idx++]=j;
+                j = pred[j];
+            }
+            for(int k=idx-1;k>=0;k--){
+                printf(" -> %c", path[k]+'A');
+            }
+            
             printf("\n");
         }
     }
 }
 
 int main() {
-    int graph[N][N];
-    int i, j, source;
+    int G[MAX][MAX], i, j;
 
-    printf("Enter the cost adjacency matrix (use 9999 for no direct link):\n");
-    for (i = 0; i < N; i++) {
-        for (j = 0; j < N; j++) {
-            scanf("%d", &graph[i][j]);
-        }
+    printf("Enter adjacency matrix (0 means no link except diagonal):\n");
+    for(i = 0; i < MAX; i++)
+        for(j = 0; j < MAX; j++)
+            scanf("%d", &G[i][j]);
+
+    printf("\n--- Adjacency Matrix ---\n");
+    for(i = 0; i < MAX; i++) {
+        for(j = 0; j < MAX; j++)
+            printf("%4d", G[i][j]);
+        printf("\n");
     }
 
-    printf("\nNodes: A=0, B=1, C=2, D=3, E=4\n");
-    printf("Enter source node number (0-4): ");
-    scanf("%d", &source);
-
-    dijkstra(graph, source);
+    for(i = 0; i < MAX; i++)
+        dijkstra(G, i);
 
     return 0;
 }
